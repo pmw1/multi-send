@@ -1407,16 +1407,15 @@ def initiateObeDockerTemp():
 	stream_splitter_start_docker.write(bytes("sudo docker kill stream-split\n", 'UTF-8'))
 	stream_splitter_start_docker.write(bytes("sudo docker rm -f stream-split\n", 'UTF-8'))
 	stream_splitter_start_docker.write(bytes("echo Inter-Docker user: $USER\n", 'UTF-8'))
-	stream_splitter_start_docker.write(bytes("sudo docker run \ \n", 'UTF-8'))
-	stream_splitter_start_docker.write(bytes("-v $HOME/apps/stream-split/hostfiles/:/hostfiles \ \n", 'UTF-8'))
-	stream_splitter_start_docker.write(bytes("-p 4444:4444/udp \ \n", 'UTF-8'))
-	stream_splitter_start_docker.write(bytes("-p 3005:3005/tcp \ \n", 'UTF-8'))
-	stream_splitter_start_docker.write(bytes("--name=\"stream-split \" \ \n", 'UTF-8'))
-	stream_splitter_start_docker.write(bytes("--network=\"split\" \ \n", 'UTF-8'))
-	stream_splitter_start_docker.write(bytes("--ip=\"10.0.10.2\" \ \n", 'UTF-8'))
-	stream_splitter_start_docker.write(bytes("--privileged -i -t \ \n", 'UTF-8'))
-	stream_splitter_start_docker.write(bytes("--ip=\"10.0.10.2 \" \ \n", 'UTF-8'))
-	stream_splitter_start_docker.write(bytes("pmw1/split-rtp \n", 'UTF-8'))
+	stream_splitter_start_docker.write(bytes("sudo docker run ", 'UTF-8'))
+	stream_splitter_start_docker.write(bytes("-v $HOME/apps/stream-split/hostfiles/:/hostfiles ", 'UTF-8'))
+	stream_splitter_start_docker.write(bytes("-p 4444:4444/udp ", 'UTF-8'))
+	stream_splitter_start_docker.write(bytes("-p 3005:3005/tcp ", 'UTF-8'))
+	stream_splitter_start_docker.write(bytes("--name=\"stream-split\" ", 'UTF-8'))
+	stream_splitter_start_docker.write(bytes("--network=\"split\" ", 'UTF-8'))
+	stream_splitter_start_docker.write(bytes("--ip=\"10.0.10.2\" ", 'UTF-8'))
+	stream_splitter_start_docker.write(bytes("--privileged -i -t -d ", 'UTF-8'))
+	stream_splitter_start_docker.write(bytes("pmw1/split-rtp\n", 'UTF-8'))
 
 
 	stream_splitter_start_docker.close()
@@ -1599,6 +1598,8 @@ if (channel):
 
 	## build aggregartp launch shell script (entrypoint script for docker pmw1/split-rtp)
 	buildAggregartpEntrypoint()
+
+	print('ok...  good the thing just ran')
 
 	#initiateObeDocker()
 	initiateObeDockerTemp()
