@@ -1,0 +1,2 @@
+#!/bin/bash
+docker run --network="split" --ip="10.0.10.3" --name="multi-send" -v /home/kevin/apps/multi-send/hostfiles:/home/default/hostfiles -v /home/kevin/recorded-video:/home/default/recorded-video -itd --device /dev/blackmagic/io0 pmw1/direct-send 

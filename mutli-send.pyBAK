@@ -1,0 +1,1060 @@
+#!/usr/bin/python3
+
+import sys
+import random
+import os
+import socket
+
+
+user=os.getlogin()
+hostname=socket.gethostname()
+stream_splitter_ip='10.0.10.2'
+stream_splitter_port='4444'
+
+
+
+
+
+####### Parse input arguments into variables  ##############
+if __name__ == "__main__":
+	import argparse
+	parser = argparse.ArgumentParser()
+	parser.add_argument('--station', '-s', help="Station destination identity")
+	parser.add_argument('--profile', '-p', help="Override default profile")
+	parser.add_argument('--force',   '-f', help="Force existing docker to close and run again")
+	parser.add_argument('--destroy', '-d', help="Destroy the direct-send container")
+	parser.add_argument('--relay1', '-1', help="Specify first relay server")
+	parser.add_argument('--relay2', '-2', help="Specify second relay server")
+	parser.add_argument('--relay3', '-3', help="Specify third relay server")
+
+	## Replicate above line to add more optional input arguments
+	
+	args = parser.parse_args()
+	print()
+	print("Retrieving station details for station Ident: ", args.station)
+
+
+	profile = args.profile
+
+
+	if(args.station):
+		station=args.station
+	else:
+		station='None'
+
+
+	if(args.force=='1'):
+		force=1
+	else:
+		force=0
+	
+
+	if(args.destroy=='1'):
+		destroy=1
+	else:
+		destroy=0
+
+######## END Processing input args into variables ############
+
+
+
+
+
+################ CLASS DEFINITION FOR CONNECTION ##############
+class sendObj:
+	####### Source Machine Variables #######
+	__src_ident = None
+	__src_ip = None
+	####### Destination Variables #########
+	__station_ident = None
+	__station_ip = None
+	__station_mode = None
+	__station_profile_pref = None
+	__station_tx_limit_mbps = None
+	__station_rx_limit_mbps = None
+	__station_rx_port = None
+	__station_relay_ident_1 = None
+	__station_relay_ident_2 = None
+	__station_relay_ident_3 = None
+	__station_contact_admin_name = None
+	__station_contact_admin_phone = None
+	__station_contact_admin_email = None
+	__station_contact_admin_company = None
+	__station_contact_admin_notes = None
+	###### Set standard profile override variables
+	__profile_profile = None
+	__profile_tx_mode = None
+	__profile_v_ts_type= None
+	__profile_v_video_format = None
+	__profile_v_pid = None
+	__profile_v_vbv_bitrate = None
+	__profile_v_vbv_maxrate = None
+	__profile_v_muxrate = None
+	__profile_v_vbv_bufsize = None
+	__profile_v_format = None
+	__profile_v_aspect_ratio = None
+	__profile_v_cbr = None
+	__profile_v_keyint = None
+	__profile_v_bframes = None
+	__profile_v_level = None
+	__profile_v_profile = None
+	__profile_intra_refresh = None
+	__profile_v_threads = None
+	__profile_system_type = None
+	__profile_a_pid = None
+	__profile_a_bitrate = None
+	__profile_a_format = None
+	__profile_a_profile = None
+	__profile_a_aac_encap = None
+	__profile_a_aac_profile = None
+	__profile_service_name = None
+	__profile_provider_name = None
+	__profile_pmt_pid = None
+	### end variable definitions
+
+
+	### Method Definitions
+	def __init__(self, station_ident):
+		self.__station_ident = station_ident
+		self.__src_ident = hostname
+
+	def set_src_ip(self, src_ip)
+		self.__src_ip = src_ip
+
+	def set_station_ip(self, station_ip):
+		self.__station_ip = station_ip
+
+	def set_station_mode(self, station_mode):
+		self.__station_mode = station_mode
+
+	def set_station_profile_pref(self, station_profile_pref):
+		self.__station_profile_pref = station_profile_pref
+
+	def set_station_tx_limit_mbps(self, station_tx_limit_mbps):
+		self.__station_tx_limit_mbps = station_tx_limit_mbps
+	
+	def set_station_rx_limit_mbps(self, station_rx_limit_mbps):
+		self.__station_rx_limit_mbps = station_rx_limit_mbps
+
+	def set_station_rx_port(self, station_rx_port):
+		self.__station_rx_port = station_rx_port
+
+	def set_station_relay_ident_1(self, station_relay_ident_1):
+		self.__relay_ident_1 = station_relay_ident_1
+
+	def set_station_relay_ident_2(self, station_relay_ident_2):
+		self.__station_relay_ident_2 = station_relay_ident_2
+
+	def set_station_relay_ident_3(self, station_relay_ident_3):
+		self.__station_relay_ident_3 = station_relay_ident_3
+
+	def set_station_contact_admin_name(self, station_contact_admin_name):
+		self.__station_contact_admin_name = station_contact_admin_name
+
+	def set_station_contact_admin_phone(self, station_contact_admin_phone):
+		self.__station_contact_admin_phone = station_contact_admin_phone
+
+	def set_station_contact_admin_email(self, station_contact_admin_email):
+		self.__station_contact_admin_email = station_contact_admin_email
+
+	def set_station_contact_admin_company(self, station_contact_admin_company):
+		self.__station_contact_admin_company = station_contact_admin_company
+
+	def set_station_contact_admin_notes(self, station_contact_admin_notes):
+		self.__station_contact_admin_notes = station_contact_admin_notes
+
+	def set_profile_profile(self, profile_profile):
+		self.__profile_profile = profile_profile
+
+	def set_profile_tx_mode(self, profile_tx_mode):
+		self.__profile_tx_mode = profile_tx_mode
+		
+	def set_profile_v_ts_type(self, profile_v_ts_type):
+		self.__profile_v_ts_type = profile_v_ts_type
+
+	def set_profile_v_video_format(self, v_video_format):
+		self.__profile_v_video_format = v_video_format
+
+	def set_profile_v_pid(self, profile_v_pid):
+		self.__profile_v_pid = profile_v_pid
+
+	def set_profile_v_vbv_bitrate(self, profile_v_vbv_bitrate):
+		self.__profile_v_vbv_bitrate = profile_v_vbv_bitrate
+
+	def set_profile_v_vbv_maxrate(self, profile_v_vbv_maxrate):
+		self.__profile_v_vbv_maxrate = profile_v_vbv_maxrate
+
+	def set_profile_v_muxrate(self, profile_v_muxrate):
+		self.__profile_v_muxrate = profile_v_muxrate
+
+	def set_profile_v_vbv_bufsize(self, profile_v_vbv_bufsize):
+		self.__profile_v_vbv_bufsize = profile_v_vbv_bufsize
+
+	def set_profile_v_format(self, profile_v_format):
+		self.__profile_v_format= profile_v_format
+
+	def set_profile_v_aspect_ratio(self, profile_v_aspect_ratio):
+		self.__profile_v_aspect_ratio = profile_v_aspect_ratio
+
+	def set_profile_v_cbr(self, profile_v_cbr):
+		self.__profile_v_cbr = profile_v_cbr
+
+	def set_profile_v_keyint(self, profile_v_keyint):
+		self.__profile_v_keyint = profile_v_keyint
+
+	def set_profile_v_bframes(self, profile_v_bframes):
+		self.__profile_v_bframes = profile_v_bframes
+
+	def set_profile_v_level(self, profile_v_level):
+		self.__profile_v_level = profile_v_level
+
+	def set_profile_v_profile(self, profile_v_profile):
+		self.__profile_v_profile = profile_v_profile
+
+	def set_profile_v_intra_refresh(self, profile_v_intra_refresh):
+		self.__profile_v_intra_refresh = profile_v_intra_refresh
+
+	def set_profile_v_threads(self, profile_v_threads):
+		self.__profile_v_threads = profile_v_threads
+
+	def set_profile_system_type(self, profile_system_type):
+		self.__profile_system_type = profile_system_type
+
+	def set_profile_a_pid(self, profile_a_pid):
+		self.__profile_a_pid = profile_a_pid
+
+	def set_profile_a_bitrate(self, profile_a_bitrate):
+		self.__profile_a_bitrate = profile_a_bitrate
+
+	def set_profile_a_format(self, profile_a_format):
+		self.__profile_a_format = profile_a_format
+
+	def set_profile_a_profile(self, profile_a_profile):
+		self.__profile_a_profile = profile_a_profile
+
+	def set_profile_a_aac_encap(self, profile_a_aac_encap):
+		self.__profile_a_aac_encap = profile_a_aac_encap
+
+	def set_profile_a_aac_profile(self, profile_a_aac_profile):
+		self.__profile_a_aac_profile = profile_a_aac_profile
+
+	def set_profile_service_name(self, profile_service_name):
+		self.__profile_service_name = profile_service_name
+
+	def set_profile_provider_name(self, profile_provider_name):
+		self.__profile_provider_name = profile_provider_name
+
+	def set_profile_pmt_pid(self, profile_pmt_pid):
+		self.__profile_pmt_pid = profile_pmt_pid
+
+	####  ADD MORE SET STATMENTS ABOVE THIS LINE
+	####  ADD GET STATEMENTS BELOW THIS LINE
+
+	def get_src_ident(self):
+		return(self.__src_ident)
+
+	def get_src_ip(self):
+		return(self.__src_ip)
+
+	def get_station_ident(self):
+		return(self.__station_ident)
+
+	def get_station_ip(self):
+		return(self.__station_ip)
+
+	def get_station_mode(self):
+		return(self.__station_mode)
+
+	def get_station_profile_pref(self):
+		return(self.__station_profile_pref)
+
+	def get_station_tx_limit_mbps(self):
+		return(self.__station_tx_limit_mbps)
+
+	def get_station_rx_limit_mbps(self):
+		return(self.__station_rx_limit_mbps)
+
+	def get_station_rx_port(self):
+		return(self.__station_rx_port)
+
+	def get_station_relay_ident_1(self):
+		return(self.__station_relay_ident_1)
+
+	def get_station_relay_ident_2(self):
+		return(self.__station_relay_ident_2)
+
+	def get_station_relay_ident_3(self):
+		return(self.__station_relay_ident_3)
+
+	def get_station_active_state(self):
+		return(self.__station_active_state)
+
+	def get_station_contact_admin_name(self):
+		return(self.__station_contact_admin_name)
+
+	def get_station_contact_admin_phone(self):
+		return(self.__station_contact_admin_phone)
+
+	def get_station_contact_admin_email(self):
+		return(self.__station_contact_admin_email)
+
+	def get_station_contact_admin_company(self):
+		return(self.__station_contact_admin_company)
+
+	def get_station_contact_admin_notes(self):
+		return(self.__station_contact_admin_notes)
+
+	def get_profile_profile(self):
+		return(self.__profile_profile)
+
+	def get_profile_tx_mode(self):
+		return(self.__profile_tx_mode)
+
+	def get_profile_v_ts_type(self):
+		return(self.__profile_v_ts_type)
+
+	def get_profile_v_video_format(self):
+		return(self.__profile_v_video_format)
+
+	def get_profile_v_pid(self):
+		return(self.__profile_v_pid)
+
+	def get_profile_v_vbv_bitrate(self):
+		return(self.__profile_v_vbv_bitrate)
+
+	def get_profile_v_vbv_maxrate(self):
+		return(self.__profile_v_vbv_maxrate)
+
+	def get_profile_v_muxrate(self):
+		return(self.__profile_v_muxrate)
+
+	def get_profile_v_vbv_bufsize(self):
+		return(self.__profile_v_vbv_bufsize)
+
+	def get_profile_v_format(self):
+		return(self.__profile_v_format)
+
+	def get_profile_v_aspect_ratio(self):
+		return(self.__profile_v_aspect_ratio)
+
+	def get_profile_v_cbr(self):
+		return(self.__profile_v_cbr)
+
+	def get_profile_v_keyint(self):
+		return(self.__profile_v_keyint)
+
+	def get_profile_v_bframes(self):
+		return(self.__profile_v_bframes)
+
+	def get_profile_v_level(self):
+		return(self.__profile_v_level)
+
+	def get_profile_v_profile(self):
+		return(self.__profile_v_profile)
+
+	def get_profile_v_intra_refresh(self):
+		return(self.__profile_v_intra_refresh)
+
+	def get_profile_v_threads(self):
+		return(self.__profile_v_threads)
+
+	def get_profile_system_type(self):
+		return(self.__profile_system_type)
+
+	def get_profile_a_pid(self):
+		return(self.__profile_a_pid)
+
+	def get_profile_a_bitrate(self):
+		return(self.__profile_a_bitrate)
+
+	def get_profile_a_format(self):
+		return(self.__profile_a_format)
+
+	def get_profile_a_profile(self):
+		return(self.__profile_a_profile)
+
+	def get_profile_a_aac_encap(self):
+		return(self.__profile_a_aac_encap)
+
+	def get_profile_a_aac_profile(self):
+		return(self.__profile_a_aac_profile)
+
+	def get_profile_service_name(self):
+		return(self.__profile_service_name)
+
+	def get_profile_provider_name(self):
+		return(self.__profile_provider_name)
+
+	def get_profile_pmt_pid(self):
+		return(self.__profile_pmt_pid)
+
+	####  OTHER OBJECT FUNCTIONS
+
+
+################# END OF CLASS DEFINITION  #########################################
+####################################################################################
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+############## FUNC GET CURRENT STATION INFO #############
+## This funtion:
+#### connects to the database and pulls full record where based 
+#### on station name match.
+
+def updateSendStation (station):
+	from configparser import ConfigParser
+	### Pull db host/user/pass from config.ini
+	parser = ConfigParser()
+	parser.read('config.ini')
+
+	#convert list to dictionary
+	config=dict(parser.items('stationDatabase'))
+
+	#set usable variables 	
+	dbhost=(config.get("dbhost"))
+	dbuser=(config.get("dbuser"))
+	dbpass=(config.get("dbpass"))
+	dbname=(config.get("dbname"))
+	dbtable=(config.get("dbtable"))
+
+	#print confirmation of variables loaded
+	##print('dbhost: ', dbhost)
+	##print('dbuser: ', dbuser)
+	##print('dbpass: ', dbpass)
+	##print('dbname: ', dbname)
+	##print('dbtable:', dbtable)
+
+	import pymysql
+	import pymysql.cursors
+	## Connect to db
+	conn=pymysql.connect(host=dbhost, user=dbuser, passwd=dbpass, db=dbname, charset='utf8mb4', cursorclass=pymysql.cursors.DictCursor)
+	try:
+		with conn.cursor() as cursor:
+			## Read the record
+			sql = "SELECT * FROM `{}` WHERE ident=\"{}\"".format(dbtable, station)
+			##print("PySQL: ", sql)
+			cursor.execute(sql)
+			result = cursor.fetchone()
+			##print(result)
+	finally:
+		conn.close
+
+	## update sendObj (object with all destination station properties)
+
+	
+	##sendConnection.set_station_ip(result.get('ip'))
+	sendConnection.set_station_ip(result.get('ip'))
+	sendConnection.set_station_mode(result.get('mode'))
+	sendConnection.set_station_profile_pref(result.get('profile_pref'))
+	sendConnection.set_station_tx_limit_mbps(result.get('tx_limit_mbps'))
+	sendConnection.set_station_rx_limit_mbps(result.get('rx_limit_mbps'))
+	sendConnection.set_station_rx_port(result.get('rx_port'))
+	sendConnection.set_station_relay_ident_1(result.get('relay_ident_1'))
+	sendConnection.set_station_relay_ident_2(result.get('relay_ident_2'))
+	sendConnection.set_station_relay_ident_3(result.get('relay_ident_3'))
+	sendConnection.set_station_contact_admin_name(result.get('contact_admin_name'))
+	sendConnection.set_station_contact_admin_phone(result.get('contact_admin_phone'))
+	sendConnection.set_station_contact_admin_email(result.get('contact_admin_email'))
+	sendConnection.set_station_contact_admin_company(result.get('contact_admin_company'))
+	sendConnection.set_station_contact_admin_notes(result.get('contact_admin_notes'))
+####################################################################################
+####################################################################################
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+######################################################################################
+########################## FUNC GET PROFILE OVERRIDE INFO ############################
+##### This funtion connects to the database and loads profile information
+#####
+#####
+
+def updateSendProfile(profile):
+	from configparser import ConfigParser
+	### Pull db host/user/pass from config.ini
+	parser = ConfigParser()
+	parser.read('config.ini')
+
+	#convert list to dictionary
+	config=dict(parser.items('profileDatabase'))
+
+	#set usable variables 	
+	dbhost=(config.get("dbhost"))
+	dbuser=(config.get("dbuser"))
+	dbpass=(config.get("dbpass"))
+	dbname=(config.get("dbname"))
+	dbtable=(config.get("dbtable"))
+
+	import pymysql
+	import pymysql.cursors
+	## Connect to db
+	conn=pymysql.connect(host=dbhost, user=dbuser, passwd=dbpass, db=dbname, charset='utf8mb4', cursorclass=pymysql.cursors.DictCursor)
+	try:
+		with conn.cursor() as cursor:
+			## Read the record
+			sql = "SELECT * FROM `{}` WHERE profile=\"{}\"".format(dbtable, profile)
+			##print("PySQL: ", sql)
+			cursor.execute(sql)
+			result = cursor.fetchone()
+			##print(result)
+	finally:
+		conn.close
+
+
+	sendConnection.set_profile_tx_mode(result.get('tx_mode'))
+	sendConnection.set_profile_v_ts_type(result.get('v_ts_type'))
+	sendConnection.set_profile_v_video_format(result.get('v_video_format'))
+	sendConnection.set_profile_v_pid(result.get('v_pid'))
+	sendConnection.set_profile_v_vbv_bitrate(result.get('v_vbv_bitrate'))
+	sendConnection.set_profile_v_vbv_maxrate(result.get('v_vbv_maxrate'))
+	sendConnection.set_profile_v_muxrate(result.get('v_muxrate'))
+	sendConnection.set_profile_v_vbv_bufsize(result.get('v_vbv_bufsize'))
+	sendConnection.set_profile_v_format(result.get('v_format'))
+	sendConnection.set_profile_v_aspect_ratio(result.get('v_aspect_ratio'))
+	sendConnection.set_profile_v_cbr(result.get('v_cbr'))
+	sendConnection.set_profile_v_keyint(result.get('v_keyint'))
+	sendConnection.set_profile_v_bframes(result.get('v_bframes'))
+	sendConnection.set_profile_v_level(result.get('v_level'))
+	sendConnection.set_profile_v_profile(result.get('v_profile'))
+	sendConnection.set_profile_v_intra_refresh(result.get('v_intra_refresh'))
+	sendConnection.set_profile_v_threads(result.get('v_threads'))
+	sendConnection.set_profile_system_type(result.get('system_type'))
+	sendConnection.set_profile_a_pid(result.get('a_pid'))
+	sendConnection.set_profile_a_bitrate(result.get('a_bitrate'))
+	sendConnection.set_profile_a_format(result.get('a_format'))
+	sendConnection.set_profile_a_profile(result.get('a_profile'))
+	sendConnection.set_profile_a_aac_encap(result.get('a_aac_encap'))
+	sendConnection.set_profile_a_aac_profile(result.get('a_aac_profile'))
+	sendConnection.set_profile_service_name(result.get('service_name'))
+	sendConnection.set_profile_provider_name(result.get('provider_name'))
+############## END FUNC GET PROFILE OVERRIDE INFO #############################
+###############################################################################
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+############## FUNC DISPLAY CURRENT OBJECT DATA ###############################
+####### This funtion:
+####### displace the sendObj Object data for the instance
+####### that is passed into it
+
+def displaySendObj(instance):
+	print('###################################################################')
+	print('-------------------------------------------------------------------')
+	print('multi-send will always deliver to the stream-splitter (10.0.10.2)')
+	print('-------------------------------------------------------------------')
+	print('###################################################################')
+	print('##############  SOURCE STATION INFORMATION  ##################')
+	print('IDENT:   ', instance.get_src_ident())
+	print('IP:      ', instance.get_src_ip())
+	print('############  DESTINATION STATION INFORMATION  ###############')
+	print('IDENT:   ', instance.get_station_ident())
+	print('IP:      ', instance.get_station_ip())
+	print('MODE:    ', instance.get_station_mode())
+	print('SENDprof:', instance.get_station_profile_pref())
+	print('TX lim:  ', instance.get_station_tx_limit_mbps())
+	print('RX lim   ', instance.get_station_rx_limit_mbps())
+	print('RX port: ', instance.get_station_rx_port())
+	print('Relay 1: ', instance.get_station_relay_ident_1())
+	print('Relay 2: ', instance.get_station_relay_ident_2())
+	print('Relay 3: ', instance.get_station_relay_ident_3())
+	print()
+	print('###########  Displaying contact data in sendObj  ###########')
+	print('NAME:    ', instance.get_station_contact_admin_name())
+	print('PHONE:   ', instance.get_station_contact_admin_phone())
+	print('EMAIL:   ', instance.get_station_contact_admin_email())
+	print('COMPANY: ', instance.get_station_contact_admin_company())
+	print('NOTES:   ', instance.get_station_contact_admin_notes())
+	print()
+	print('###########   Displaying Profile Override data   ###########')
+	print('TX MODE: ', instance.get_profile_tx_mode())
+	print('TX TYPE: ', instance.get_profile_v_ts_type())
+	print('VIDFORMAT', instance.get_profile_v_video_format())
+	print('VPID:    ', instance.get_profile_v_pid())
+	print('VBR:     ', instance.get_profile_v_vbv_bitrate())
+	print('VMAX BIT ', instance.get_profile_v_vbv_maxrate())
+	print('MUXRATE: ', instance.get_profile_v_muxrate())
+	print('VBUF:    ', instance.get_profile_v_vbv_bufsize())
+	print('VFORMAT: ', instance.get_profile_v_format())
+	print('VASPECT: ', instance.get_profile_v_aspect_ratio())
+	print('CBRMODE: ', instance.get_profile_v_cbr())
+	print('KEYINT:  ', instance.get_profile_v_keyint())
+	print('VBFRAME: ', instance.get_profile_v_bframes())
+	print('VLEVEL:  ', instance.get_profile_v_level())
+	print('VPROFILE:', instance.get_profile_v_profile())
+	print('INTRAREF:', instance.get_profile_v_intra_refresh())
+	print('VTHREADS:', instance.get_profile_v_threads())
+	print('SYSTYPE: ', instance.get_profile_system_type())
+	print('APID     ', instance.get_profile_a_pid())
+	print('ABIT:    ', instance.get_profile_a_bitrate())
+	print('AFORMAT: ', instance.get_profile_a_format())
+	print('APROFILE:', instance.get_profile_a_profile())
+	print('AACPROF: ', instance.get_profile_a_aac_profile())
+	print('AENCAP:  ', instance.get_profile_a_aac_encap())
+	print('SERVICE: ', instance.get_profile_service_name())
+	print('PROVIDER:', instance.get_profile_provider_name())
+
+
+############ END FUNC DISPLAY CURRENT OBJECT DATA #############
+###############################################################
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+######################################################################################
+########################## FUNC BUILD OBE RUNNER SCRIPT ############################
+##### construct the shell script that will be transferred to host files to run OBE
+##### from within the docker environment.
+#####
+def buildObeRunner():
+	import stat
+	## open file for writing
+	obe_send_file = open("hostfiles/start-obe.sh", "wb")
+
+	obe_send_file.write(bytes("#!/bin/bash\n", 'UTF-8'))
+	obe_send_file.write(bytes("NAME=obe\n", 'UTF-8'))
+	######## '-d' here 
+	obe_send_file.write(bytes("screen  -d -m -S $NAME obecli\n", 'UTF-8'))
+	obe_send_file.write(bytes("sleep 2\n", 'UTF-8'))
+	obe_send_file.write(bytes("screen -p 0 -S $NAME -X stuff $\"set input decklink" + r"\012" +"\"\n", 'UTF-8'))
+	obe_send_file.write(bytes("screen -p 0 -S $NAME -X stuff $\"set input opts card-idx=0" + r"\012" +"\"\n", 'UTF-8'))
+	obe_send_file.write(bytes("screen -p 0 -S $NAME -X stuff $\"set input opts video-format=%s" % sendConnection.get_profile_v_video_format() + r'\012' +'\"\n' , 'UTF-8'))
+	obe_send_file.write(bytes("screen -p 0 -S $NAME -X stuff $\"set input opts video-connection=sdi" + r"\012" +"\"\n", 'UTF-8'))
+	obe_send_file.write(bytes("screen -p 0 -S $NAME -X stuff $\"set input opts audio-connection=embedded" + r"\012" +"\"\n" ,'UTF-8'))
+	obe_send_file.write(bytes("screen -p 0 -S $NAME -X stuff $\"set obe opts system-type=lowestlatency" + r"\012" +"\"\n", 'UTF-8'))
+	obe_send_file.write(bytes("screen -p 0 -S $NAME -X stuff $\"probe input" + r"\012" +"\"\n", 'UTF-8'))
+	obe_send_file.write(bytes("sleep 1\n", 'UTF-8'))
+
+	#### Video 
+	obe_send_file.write(bytes('screen -p 0 -S $NAME -X stuff ', 'UTF-8'))
+	obe_send_file.write(bytes('$\"set stream opts 0:pid=%s' % sendConnection.get_profile_v_pid() + ',' ,'UTF-8'))
+	
+	if(sendConnection.get_profile_v_vbv_maxrate() is not None):
+		obe_send_file.write(bytes('vbv-maxrate=%s' % sendConnection.get_profile_v_vbv_maxrate() + ',' ,'UTF-8'))
+
+	if(sendConnection.get_profile_v_vbv_bitrate() is not None):
+		obe_send_file.write(bytes('bitrate=%s' % sendConnection.get_profile_v_vbv_bitrate() + ',' ,'UTF-8'))
+	
+	if(sendConnection.get_profile_v_keyint() is not None):
+		obe_send_file.write(bytes('keyint=%s' % sendConnection.get_profile_v_keyint() + ',' ,'UTF-8'))
+	
+	if(sendConnection.get_profile_v_bframes() is not None):
+		obe_send_file.write(bytes('bframes=%s' % sendConnection.get_profile_v_bframes() + ',' ,'UTF-8'))
+	
+	if(sendConnection.get_profile_v_threads() is not None):
+		obe_send_file.write(bytes('threads=%s' % sendConnection.get_profile_v_threads() + ',' ,'UTF-8'))
+
+	if(sendConnection.get_profile_system_type() is not None):
+		obe_send_file.write(bytes('$\"set obe opts %s' % sendConnection.get_profile_system_type() + ',' ,'UTF-8'))
+
+	if(sendConnection.get_profile_v_format() is not None):
+		obe_send_file.write(bytes('format=%s' % sendConnection.get_profile_v_format() + ',' , 'UTF-8'))
+	
+	if(sendConnection.get_profile_v_profile() is not None):
+		obe_send_file.write(bytes('profile=%s' % sendConnection.get_profile_v_profile() + ',' , 'UTF-8'))
+	
+	if(sendConnection.get_profile_v_level() is not None):
+		obe_send_file.write(bytes('level=%s' % sendConnection.get_profile_v_level() + ',' , 'UTF-8'))
+	
+	if(sendConnection.get_profile_v_aspect_ratio() is not None):
+		obe_send_file.write(bytes('aspect-ratio=%s' % sendConnection.get_profile_v_aspect_ratio() + ',' , 'UTF-8'))
+	
+	if(sendConnection.get_profile_v_intra_refresh() is not None):
+		obe_send_file.write(bytes('intra-refresh=%s' % sendConnection.get_profile_v_intra_refresh() , 'UTF-8'))
+
+	obe_send_file.write(bytes( r'\012' + '\"\n' , 'UTF-8'))	
+
+	
+
+	#### Audio
+
+	obe_send_file.write(bytes('screen -p 0 -S $NAME -X stuff ', 'UTF-8'))
+	obe_send_file.write(bytes('$\"set stream opts 1:pid=%s' % sendConnection.get_profile_a_pid() + ',' ,'UTF-8'))
+	
+	if(sendConnection.get_profile_a_bitrate() is not None):
+		obe_send_file.write(bytes('bitrate=%s' % sendConnection.get_profile_a_bitrate(),'UTF-8'))
+		if(sendConnection.get_profile_a_format() is not None):
+			obe_send_file.write(bytes(',','UTF-8'))
+		else:
+			obe_send_file.write(bytes( r'\012' +'\"\n' ,'UTF-8'))
+
+	if(sendConnection.get_profile_a_format() is not None):
+		obe_send_file.write(bytes('format=%s' % sendConnection.get_profile_a_format(),'UTF-8'))
+		if(sendConnection.get_profile_a_profile() is not None):
+			obe_send_file.write(bytes(',','UTF-8'))
+		else:
+			obe_send_file.write(bytes( r'\012' + 'boom\"\n' ,'UTF-8'))
+
+	if(sendConnection.get_profile_a_profile() is not None):
+		obe_send_file.write(bytes('aac-profile=%s' % sendConnection.get_profile_a_profile(),'UTF-8'))
+		if(sendConnection.get_profile_a_aac_encap() is not None):
+			obe_send_file.write(bytes(',','UTF-8'))
+		else:
+			obe_send_file.write(bytes( r'\012' + '\"\n' ,'UTF-8'))
+
+	if(sendConnection.get_profile_a_aac_encap() is not None):
+		obe_send_file.write(bytes('aac-encap=%s' % sendConnection.get_profile_a_aac_encap() + r'\012' +'\"\n','UTF-8'))	
+
+	#####
+	
+	if(sendConnection.get_profile_pmt_pid() is not None):
+		obe_send_file.write(bytes('screen -p 0 -S $NAME -X stuff ', 'UTF-8'))
+		obe_send_file.write(bytes('$\"set stream opts 0:pid=%s' % sendConnection.get_profile_pmt_pid() + r'\012' +'\"\n','UTF-8'))
+
+	if(sendConnection.get_profile_v_ts_type() is not None):
+		obe_send_file.write(bytes('screen -p 0 -S $NAME -X stuff ', 'UTF-8'))
+		obe_send_file.write(bytes('$\"set muxer opts ts-type=%s' % sendConnection.get_profile_v_ts_type() + "," ,'UTF-8'))
+
+	if(sendConnection.get_profile_v_muxrate() is not None):
+		obe_send_file.write(bytes('ts-muxrate=%s' % (sendConnection.get_profile_v_muxrate() * 1000) + r'\012' +'\"\n' ,'UTF-8'))
+
+
+	if(sendConnection.get_profile_tx_mode() is not None):
+		obe_send_file.write(bytes('screen -p 0 -S $NAME -X stuff ', 'UTF-8'))
+		obe_send_file.write(bytes('$\"set output %s' % sendConnection.get_profile_tx_mode() + r'\012' +'\"\n','UTF-8'))
+
+	obe_send_file.write(bytes('screen -p 0 -S $NAME -X stuff ', 'UTF-8'))
+	obe_send_file.write(bytes('$\"set outputs 1' + r'\012' + '\"\n','UTF-8'))
+	
+	if(sendConnection.get_profile_tx_mode() is not None):
+		obe_send_file.write(bytes('screen -p 0 -S $NAME -X stuff ', 'UTF-8'))
+		obe_send_file.write(bytes('$\"set output opts 0:target={0}://{1}:{2}'.format(sendConnection.get_profile_tx_mode(), stream_splitter_ip, stream_splitter_port)  + r'\012' +'\"\n', 'UTF-8'))
+
+		obe_send_file.write(bytes("screen -p 0 -S $NAME -X stuff $\"start" + r'\012' + "\"\n", 'UTF-8'))
+
+	obe_send_file.write(bytes("screen -r\n", 'UTF-8'))
+
+			### lowlat setting could be  auto, but better to be in db and pull into script
+
+	obe_send_file.close()
+
+
+	##os.chmod('hostfiles/start-obe.sh', stat.S_IXOTH)
+
+###################  END BUILD OBE RUNNER   ###################
+###############################################################
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+######################################################################################
+################################ INITIATE OBE DOCKER #################################
+##### Luach Obe Docker and pass all variables into docker
+##### (THIS IS NOT CURRENTLY WORKING - calling initiateObeDockerTemp until this can be 
+##### sorted out.
+
+
+
+def initiateObeDocker():
+	print()
+	print('##################################   Launching OBE DOCKER   ##########################################')
+	from configparser import ConfigParser
+	### Pull dcocker image name from config.ini
+	parser2 = ConfigParser()
+	parser2.read('config.ini')
+	#convert list to dictionary
+	config=dict(parser2.items('dockerImages'))
+	#set usable variables 	
+	obeDockerName=(config.get("obesenddocker"))
+	print ('using docker: ' + obeDockerName)
+
+
+	import docker
+	docker = docker.from_env()  
+
+	container = docker.create_container(
+		image = obeDockerName,
+		stdin_open=True,
+		tty=True,
+		command='/bin/bash/',
+		volumes=['/home/default/hostfiles', '/home/default/recorded-video'],
+
+		host_config=docker.create_host_config(binds={
+			'/home/kevin/docker/obe-rt-send/hostfiles': {
+				'bind': '/home/default/hostfiles',
+				'mode': 'rw',
+			},
+			'/home/kevin/recorded-video': {
+				'bind': '/home/default/recorded-video',
+				'mode': 'rw'
+
+			}
+
+			})
+
+		)
+
+
+	docker.start(containter)
+
+
+
+###############################  END INITIATE OBE DOCKER   ##############################
+#######################################################################################
+
+
+######################################################################################
+################################ INITIATE OBE DOCKER (TEMP) #################################
+##### initiate docker by forming a bash script and executing it.
+##### (Eventually, we should use the docker api for python to run docker from within the py)
+#####   
+
+def initiateObeDockerTemp():
+
+	print('Initiating Obe Docker (using temporary function)')
+
+	from subprocess import call
+	import stat
+
+	obe_start_docker = open("hostfiles/start-docker.sh", "wb")
+
+	obe_start_docker.write(bytes("#!/bin/bash\n", 'UTF-8'))
+	obe_start_docker.write(bytes("docker run ", 'UTF-8'))
+	obe_start_docker.write(bytes("--network=\"split\" ", 'UTF-8'))
+	obe_start_docker.write(bytes("--ip=\"10.0.10.3\" ", 'UTF-8'))
+	obe_start_docker.write(bytes("--name=\"multi-send\" ", 'UTF-8'))
+	obe_start_docker.write(bytes("-v /home/" + user + "/apps/multi-send/hostfiles:/home/default/hostfiles ", 'UTF-8'))
+	obe_start_docker.write(bytes("-v /home/" + user + "/recorded-video:/home/default/recorded-video ", 'UTF-8'))
+	##obe_start_docker.write(bytes("--entrypoint=\"/bin/bash\" ", 'UTF-8'))
+	obe_start_docker.write(bytes("-itd ", 'UTF-8'))
+	obe_start_docker.write(bytes("--device /dev/blackmagic/io0 ", 'UTF-8'))
+	obe_start_docker.write(bytes("pmw1/direct-send ", 'UTF-8'))
+
+	obe_start_docker.close()
+
+	##os.chmod('hostfiles/start-docker.sh', stat.S_IXOTH)
+
+	call(['bash', 'hostfiles/start-docker.sh'])
+
+
+###############################  END INITIATE OBE DOCKER   ##############################
+######################################################################################
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+######################################################################################
+################################ SET ACTIVE STATUS  #################################
+##### connect to database and change change status to active
+##### 
+
+def setActive():
+	from configparser import ConfigParser
+	### Pull db host/user/pass from config.ini
+	parser = ConfigParser()
+	parser.read('config.ini')
+
+	#convert list to dictionary
+	config=dict(parser.items('stationDatabase'))
+
+	#set usable variables 	
+	dbhost=(config.get("dbhost"))
+	dbuser=(config.get("dbuser"))
+	dbpass=(config.get("dbpass"))
+	dbname=(config.get("dbname"))
+	dbtable=(config.get("dbtable"))
+
+	import pymysql
+	import pymysql.cursors
+	## Connect to db
+	conn=pymysql.connect(host=dbhost, user=dbuser, passwd=dbpass, db=dbname, charset='utf8mb4', cursorclass=pymysql.cursors.DictCursor)
+	try:
+		with conn.cursor() as cursor:
+			## Read the record
+			sql = "UPDATE {} SET active_state=\'1\' WHERE ident=\'{}\'".format(dbtable, station)
+			print(sql)
+			##print("PySQL: ", sql)
+			cursor.execute(sql)
+			result = cursor.fetchone()
+			##print(result)
+	finally:
+		conn.close
+
+###############################  END SET ACTIVE STATE  ##############################
+######################################################################################
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+######################################################################################
+################################ FORCE SAME NAME CONTAINER DOWN  #####################
+
+def forceSameNameContainerDown(name):
+	bashCommand="sudo docker rm -f " + name
+	os.system(bashCommand)
+
+######################################################################################
+############################ END FORCE SAME NAME CONTAINER DOWN  #####################
+
+
+
+
+
+
+
+
+
+
+
+
+######################################################################################
+######################################################################################
+if (destroy==1):
+	print("Destroying container: multi-send")
+	bashCommand="sudo docker rm -f multi-send"
+	os.system(bashCommand)
+	quit()
+### Check for need to kill previous running container with same name.  Prevent start failure.
+if (force==1):
+	print("FORCING")
+	forceSameNameContainerDown('multi-send')
+######################################################################################
+######################################################################################
+
+
+
+
+
+
+
+
+######################################################################################
+############################  START EXECUTING THINGS #################################
+
+
+
+
+sendConnection = sendObj(station)
+
+## if sendConnection instance exists, print ident and update target station
+## by calling the updateSendStation function
+if (sendConnection):
+	## update target station info in sendConnection (sendObj) class	
+	updateSendStation(station)
+	## update profile information if override is specified
+	
+	if(profile is not None):
+		print("Profile override (based on start flag): ", profile)
+		updateSendProfile(profile)
+	elif(sendConnection.get_station_profile_pref()):
+		print("Profile override  (based on DB station definition)", sendConnection.get_station_profile_pref())
+		updateSendProfile(sendConnection.get_station_profile_pref())
+	else:
+		print("No Profile overrides detected")
+
+
+	displaySendObj(sendConnection)
+
+	buildObeRunner()
+
+	#initiateObeDocker()
+	initiateObeDockerTemp()
+
+	##set active status
+	##setActive()
+
+
+
+
+
+
+
+
+
+
+
+
+
