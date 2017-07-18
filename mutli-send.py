@@ -44,15 +44,37 @@ if __name__ == "__main__":
 
 
 	if(args.force=='1'):
-		force=1
-	else:
-		force=0
+		print("***  FORCING ------------------------  ***")
+		print("***  Destroying container: multi-send  ***")
+		print("***  --------------------------------  ***")
+		os.system("sudo docker rm -f multi-send")
+
 	
 
 	if(args.destroy=='1'):
-		destroy=1
-	else:
-		destroy=0
+		print("***  Destroying container: multi-send  ***")
+		os.system("sudo docker rm -f multi-send")
+		quit()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 	if(args.relay1 is not None):
 		print('relay 1 manually entered, but not programmed to override defaults yet')
@@ -1089,14 +1111,6 @@ def buildAggregartpEntrypoint():
 		splitter_start_docker.write(bytes('{0}:{1}\n '.format(channel.get_relay_3("ip"), channel.get_relay_3("port_in")), 'UTF-8'))
 		
 
-
-
-	print ()
-	print ()
-	print (channel.get_relay_1('ip'))
-	print ()
-	print ()
-
 	splitter_start_docker.close()
 
 ############################  END BUILD OBE RUNNER   ############################
@@ -1368,8 +1382,9 @@ def initiateObeDockerTemp():
 
 	print('Initiating Obe Docker (using temporary function)')
 
-	from subprocess import call
+	import subprocess
 	import stat
+
 
 	obe_start_docker = open("hostfiles/start-docker.sh", "wb")
 
@@ -1387,19 +1402,56 @@ def initiateObeDockerTemp():
 
 	obe_start_docker.close()
 
-	##os.chmod('hostfiles/start-docker.sh', stat.S_IXOTH)
+	os.chmod('hostfiles/start-docker.sh', stat.S_IXOTH)
+	proc = subprocess.Popen('sudo hostfiles/start-docker.sh', shell=True)
 
-	call(['bash', 'hostfiles/start-docker.sh'])
+	
 
+	##call(['bash', 'hostfiles/start-docker.sh'])
+	##os.system("start hostfiles/start-docker.sh")
 
 ###############################  END INITIATE OBE DOCKER   ##############################
 ######################################################################################
 
 
-def initiateObeDockerTemp():
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+######################################################################################
+################################ INITIATE AGGRERTP  ##################################
+##### 
+##### 
+#####   
+
+def initiateAggregartp():
 	print('Initiating Aggregartp Docker')
 
-	from subprocess import call
+	import subprocess
 	import stat
 
 	stream_splitter_start_docker = open("../stream-split/start-stream-split.sh", "wb")
@@ -1420,7 +1472,13 @@ def initiateObeDockerTemp():
 
 	stream_splitter_start_docker.close()
 
-	call(['bash', '../stream-split/start-stream-split.sh'])
+	os.chmod('../stream-split/start-stream-split.sh', stat.S_IXOTH)
+	proc = subprocess.Popen('sudo ../stream-split/start-stream-split.sh', shell=True)
+
+	##call(['bash', '../stream-split/start-stream-split.sh'])
+
+###############################  END INITIATE AGGREGARTP  ############################
+######################################################################################
 
 
 
@@ -1495,49 +1553,6 @@ def setActive():
 
 
 
-######################################################################################
-################################ FORCE SAME NAME CONTAINER DOWN  #####################
-
-def forceSameNameContainerDown(name):
-	bashCommand="sudo docker rm -f " + name
-	os.system(bashCommand)
-
-######################################################################################
-############################ END FORCE SAME NAME CONTAINER DOWN  #####################
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-######################################################################################
-######################################################################################
-if (destroy==1):
-	print("Destroying container: multi-send")
-	bashCommand="sudo docker rm -f multi-send"
-	os.system(bashCommand)
-	quit()
-### Check for need to kill previous running container with same name.  Prevent start failure.
-if (force==1):
-	print("FORCING")
-	forceSameNameContainerDown('multi-send')
-######################################################################################
-######################################################################################
-
 
 
 
@@ -1593,13 +1608,14 @@ if (channel):
 
 	displaychannelObj(channel)
 
+	## bufld the entrypoint shell script for the stream-splitter (aggreartp)
+	buildAggregartpEntrypoint()
+
 	## build shell file to execute obe
 	buildObeRunner()
 
 	## build aggregartp launch shell script (entrypoint script for docker pmw1/split-rtp)
-	buildAggregartpEntrypoint()
-
-	print('ok...  good the thing just ran')
+	initiateAggregartp()
 
 	#initiateObeDocker()
 	initiateObeDockerTemp()
