@@ -428,13 +428,15 @@ def buildAggregartpEntrypoint():
 	entrypoint_file.write(bytes("#!/bin/bash\n", 'UTF-8'))
 	entrypoint_file.write(bytes('aggregartp -U @:4444 ', 'UTF-8'))
 	if relay1 is not None:
-		entrypoint_file.write(bytes(" 239.1.0.1:3001@" + relay1,'UTF-8'))
+		entrypoint_file.write(bytes(relay1 + ":3001 ",'UTF-8'))
 	if relay2 is not None:
-		entrypoint_file.write(bytes(" 239.1.0.1:3001@" + relay2,'UTF-8'))
+		entrypoint_file.write(bytes(relay2 + ":3001 ",'UTF-8'))
 	if relay3 is not None:
-		entrypoint_file.write(bytes(" 239.1.0.1:3001@" + relay3,'UTF-8'))
+		entrypoint_file.write(bytes(relay3 + ":3001 ",'UTF-8'))
 
-	entrypoint_file.write(bytes(" -X 192.168.0.1:3005/tcp ",'UTF-8'))
+		entrypoint_file.write(bytes("-X @:3005 ",'UTF-8'))
+
+	#entrypoint_file.write(bytes(" -X 10.0.10.2:3005/tcp ",'UTF-8'))
 
 	entrypoint_file.close()
 
@@ -474,7 +476,7 @@ def buildObeRunner():
 	obe_send_file.write(bytes("screen -p 0 -S $NAME -X stuff $\"set input opts audio-channel=embedded" + r"\012" +"\"\n" ,'UTF-8'))
 	obe_send_file.write(bytes("screen -p 0 -S $NAME -X stuff $\"set obe opts system-type=lowestlatency" + r"\012" +"\"\n", 'UTF-8'))
 	obe_send_file.write(bytes("screen -p 0 -S $NAME -X stuff $\"probe input" + r"\012" +"\"\n", 'UTF-8'))
-	obe_send_file.write(bytes("sleep 1\n", 'UTF-8'))
+	obe_send_file.write(bytes("sleep 2\n", 'UTF-8'))
 
 	#### Video 
 	obe_send_file.write(bytes('screen -p 0 -S $NAME -X stuff ', 'UTF-8'))
@@ -621,7 +623,8 @@ def initiateAggregartp():
 	stream_splitter_start_docker.write(bytes("--name=\"stream-split\" ", 'UTF-8'))
 	stream_splitter_start_docker.write(bytes("--network=\"split\" ", 'UTF-8'))
 	stream_splitter_start_docker.write(bytes("--ip=\"10.0.10.2\" ", 'UTF-8'))
-	stream_splitter_start_docker.write(bytes("--privileged -i -t  ", 'UTF-8'))
+	##stream_splitter_start_docker.write(bytes("--entrypoint=\"/bin/bash\" " ,'UTF-8'))
+	stream_splitter_start_docker.write(bytes("--privileged -i -t -d ", 'UTF-8'))
 	stream_splitter_start_docker.write(bytes("pmw1/split-rtp\n", 'UTF-8'))
 	stream_splitter_start_docker.write(bytes("echo && echo", 'UTF-8'))
 
@@ -733,5 +736,4 @@ initiateAggregartp()
 
 ## Initiate/run OBE Docker 
 initiateObeDocker()
-
 
